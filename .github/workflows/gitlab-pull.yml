@@ -2,24 +2,35 @@ name: GitLab Pull
 
 on:
   workflow_call:
-    outputs:
-      repo_path:
-        description: "path from the gitlab checkout"
-        value: ${{ jobs.pull-from-gitlab.outputs.repo_path }}
     inputs:
       repo_name:
         required: true
         description: "name of repo"
         type: string
-      gitlab_base:
-        required: false
-        description: "gitlab base url"
-        type: string
-        value: "https://gitlab.com/"
       gitlab_path:
         required: true
         description: "path of gitlab project"
         type: string
+      gitlab_base:
+        required: false
+        description: "gitlab base url"
+        type: string
+        value: "gitlab.com"
+      email:
+        required: false
+        description: "Email to use for github - cosmetic"
+        type: string
+        default: "no-reply@example.com"
+      docker_file:
+        required: false
+        description: "name of dockerfile to run"
+        type: string
+        default: ""
+      trigger_release:
+        required: false
+        description: "should the release run"
+        type: boolean
+        default: false
     secrets:
       GL_TOKEN:
         required: true
@@ -30,16 +41,70 @@ on:
 jobs:
   pull-from-gitlab:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: setup gitlab creds
+        id: gitlab-config
+        run: |
+          git config --global user.email "${{ inputs.email }}"
+          git config --global user.name "Autobots-Assemble"
 
       - name: Pull from GitLab
+        id: clone-gitlab
         run: |
-          git config --global credential.helper 'store --file ~/.git-credentials'
-          echo "${{ inputs.gitlab_base }} ${{ secrets.GL_USERNAME }}:${{ secrets.GL_TOKEN }}" > ~/.git-credentials
-          git config --global user.email "automate@facefirst.com"
-          git config --global user.name "Automation"
-          git pull ${{ inputs.gitlab_base }}/${{ inputs.gitlab_path }}/${{ inputs.repo_name }}.git
+          git clone https://${{ secrets.GL_USERNAME }}:${{ secrets.GL_TOKEN }}@${{ inputs.gitlab_base }}/${{ inputs.gitlab_path }}/${{ inputs.repo_name }}.git ${{ inputs.repo_name }}
           echo "repo_path=${{ inputs.repo_name }}" >> $GITHUB_OUTPUT
+          mv ${{ inputs.repo_name }}/dockerfile.powershell ${{ inputs.repo_name }}/Dockerfile
+
+      - name: Rename dockerfile
+        if: ${{ inputs.docker_file != '' }}
+        id: clone-gitlab
+        run: |
+          mv ${{ inputs.repo_name }}/${{ inputs.docker_file }} ${{ inputs.repo_name }}/Dockerfile
+
+      # THIS STEP NEEDS A CHECKOUT ACTION IN THE SAME JOB FOR IT TO GENERATE VERSIONS
+      - name: Semantic Version
+        id: sem-ver
+        uses: paulhatch/semantic-version@v5.0.2
+        with:
+          change_path: ${{ steps.clone-gitlab.outputs.repo_path }}
+          search_commit_body: true
+          bump_each_commit: true
+          version_format: "${major}.${minor}.${patch}-${increment}"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }} # THIS STEP NEEDS A CHECKOUT ACTION UPSTREAM TO USE THIS TOKEN
+          password: ${{ secrets.GITHUB_TOKEN }} # THIS STEP NEEDS A CHECKOUT ACTION UPSTREAM USE THIS TOKEN
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ inputs.image_name }}
+          tags: |
+            type=sha
+            type=raw,latest
+            type=ref,event=branch
+            type=schedule,pattern={{date 'YYYYMMDD'}}
+            type=semver,pattern={{version}},value=${{ steps.sem-ver.outputs.version }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          tags: ${{ steps.meta.outputs.tags }}
+          context:  ${{ steps.clone-gitlab.outputs.repo_path }}
+          push: ${{ inputs.trigger_release }}
+          labels: ${{ steps.meta.outputs.labels }}
+
