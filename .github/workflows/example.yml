@@ -30,13 +30,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Pull from GitLab
-        id: clone-gitlab
+      - name: setup gitlab creds
+        id: gitlab-config
         run: |
           git config --global credential.helper 'store --file ~/.git-credentials'
           echo "${{ env.gitlab_base }} ${{ secrets.GL_USERNAME }}:${{ secrets.GL_TOKEN }}" > ~/.git-credentials
           git config --global user.email "automate@facefirst.com"
           git config --global user.name "Automation"
+
+      - name: Pull from GitLab
+        id: clone-gitlab
+        run: |
           git pull ${{ env.gitlab_base }}/${{ env.gitlab_path }}/${{ env.repo_name }}.git
           echo "repo_path=${{ env.repo_name }}" >> $GITHUB_OUTPUT
           mv ${{ env.repo_name }}/dockerfile.powershell ${{ env.repo_name }}/Dockerfile
