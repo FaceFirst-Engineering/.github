@@ -1,0 +1,38 @@
+name: Build Docker images
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ./**
+      - ./.github/workflows/example.yml
+  pull_request:
+
+jobs:
+  gitlab-test:
+    outputs:
+      repo_path: ${{ steps.clone-gitlab.outputs.repo_path }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Clone Gitlab
+        id: clone-gitlab
+        uses: ./.github/workflows/gitlab-pull.yml
+        with:
+          repo_name: docker
+          gitlab_path: facefirst-engineering/devsecops
+        secrets: inherit
+
+  docker-build:
+    uses: xander-rudolph/.github/.github/workflows/docker-publish.yml@master
+    strategy:
+      matrix:
+        image: ['powershell']
+    with:
+      image_name: ${{ matrix.image }}
+      # optional
+      working_dir: ./${{ needs.gitlab-test.outputs.repo_path }}/${{ matrix.image }}
+      trigger_release: ${{ github.ref_name == 'main' }}
+    secrets: inherit
