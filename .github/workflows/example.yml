@@ -23,7 +23,6 @@ jobs:
         with:
           repo_name: docker
           gitlab_path: facefirst-engineering/devsecops
-        secrets: inherit
 
   docker-build:
     uses: xander-rudolph/.github/.github/workflows/docker-publish.yml@master
