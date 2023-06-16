@@ -15,7 +15,7 @@ on:
         required: false
         description: "gitlab base url"
         type: string
-        value: "gitlab.com"
+        default: "gitlab.com"
       email:
         required: false
         description: "Email to use for github - cosmetic"
