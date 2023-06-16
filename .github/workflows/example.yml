@@ -6,8 +6,6 @@ on:
 
 jobs:
   docker-build:
-    permissions:
-      contents: write
     uses: ./.github/workflows/gitlab-dockerbuild.yml
     strategy:
       matrix:
