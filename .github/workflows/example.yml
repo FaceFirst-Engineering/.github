@@ -3,16 +3,9 @@ name: Build Docker images
 on:
   push:
     paths:
-      - ./**
-      - ./.github/workflows/example.yml
+      - */**
+      - */.github/workflows/example.yml
   pull_request:
-  workflow_dispatch:
-
-    secrets:
-      GL_TOKEN:
-        required: true
-      GL_USERNAME:
-        required: true  
 
 env:
   repo_name: docker
