@@ -6,18 +6,30 @@ on:
       - ./**
       - ./.github/workflows/example.yml
   pull_request:
+  workflow_dispatch:
+
+    secrets:
+      GL_TOKEN:
+        required: true
+      GL_USERNAME:
+        required: true  
 
 env:
   repo_name: docker
   gitlab_base: "https://gitlab.com/"
   gitlab_path: facefirst-engineering/devsecops
+  image_name: powershell
 
 jobs:
   gitlab-test:
-    # outputs:
-    #   repo_path: ${{ steps.clone-gitlab.outputs.repo_path }}
+    outputs:
+      repo_path: ${{ steps.clone-gitlab.outputs.repo_path }}
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
       - name: Pull from GitLab
         id: clone-gitlab
         run: |
@@ -27,6 +39,50 @@ jobs:
           git config --global user.name "Automation"
           git pull ${{ env.gitlab_base }}/${{ env.gitlab_path }}/${{ env.repo_name }}.git
           echo "repo_path=${{ env.repo_name }}" >> $GITHUB_OUTPUT
+          mv ${{ env.repo_name }}/dockerfile.powershell ${{ env.repo_name }}/Dockerfile
+
+      # THIS STEP NEEDS A CHECKOUT ACTION IN THE SAME JOB FOR IT TO GENERATE VERSIONS
+      - name: Semantic Version
+        id: sem-ver
+        uses: paulhatch/semantic-version@v5.0.2
+        with:
+          change_path: ${{ steps.clone-gitlab.outputs.repo_path }}
+          search_commit_body: true
+          bump_each_commit: true
+          version_format: "${major}.${minor}.${patch}-${increment}"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }} # THIS STEP NEEDS A CHECKOUT ACTION UPSTREAM TO USE THIS TOKEN
+          password: ${{ secrets.GITHUB_TOKEN }} # THIS STEP NEEDS A CHECKOUT ACTION UPSTREAM USE THIS TOKEN
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ env.image_name }}
+          tags: |
+            type=sha
+            type=raw,latest
+            type=ref,event=branch
+            type=schedule,pattern={{date 'YYYYMMDD'}}
+            type=semver,pattern={{version}},value=${{ steps.sem-ver.outputs.version }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          tags: ${{ steps.meta.outputs.tags }}
+          context:  ${{ steps.clone-gitlab.outputs.repo_path }}
+          push: ${{ github.ref_name == 'main' }}
+          labels: ${{ steps.meta.outputs.labels }}
 
       # - name: Clone Gitlab
       #   id: clone-gitlab
@@ -34,16 +90,16 @@ jobs:
       #   with:
       #     repo_name: docker
       #     gitlab_path: facefirst-engineering/devsecops
-      
-      - name: docker build
-        uses: xander-rudolph/.github/.github/workflows/docker-publish.yml@master
-        strategy:
-          matrix:
-            image: ['powershell']
-        needs: [clone-gitlab]
-        with:
-          image_name: ${{ matrix.image }}
-          # optional
-          working_dir: ./${{ steps.clone-gitlab.outputs.repo_path }}/${{ matrix.image }}
-          trigger_release: ${{ github.ref_name == 'main' }}
-        secrets: inherit
+
+  # docker-build:
+  #   uses: xander-rudolph/.github/.github/workflows/docker-publish.yml@master
+  #   strategy:
+  #     matrix:
+  #       image: ['powershell']
+  #   needs: [gitlab-test]
+  #   with:
+  #     image_name: ${{ matrix.image }}
+  #     # optional
+  #     working_dir: ./${{ needs.gitlab-test.outputs.repo_path }}/${{ matrix.image }}
+  #     trigger_release: ${{ github.ref_name == 'main' }}
+  #   secrets: inherit
