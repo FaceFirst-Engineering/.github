@@ -19,7 +19,7 @@ jobs:
 
       - name: Clone Gitlab
         id: clone-gitlab
-        uses: ../workflows/gitlab-pull.yml
+        uses: ./../workflows/gitlab-pull.yml
         with:
           repo_name: docker
           gitlab_path: facefirst-engineering/devsecops
