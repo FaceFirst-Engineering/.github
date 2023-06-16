@@ -33,11 +33,11 @@ jobs:
       - name: setup gitlab creds
         id: gitlab-config
         run: |
-          git config --global credential.helper="~/.git-credentials"
           echo "${{ env.gitlab_base }} ${{ secrets.GL_USERNAME }}:${{ secrets.GL_TOKEN }}" > ~/.git-credentials
           git config --global user.email "automate@facefirst.com"
           git config --global user.name "Automation"
           cat ~/.git-credentials
+          git config --global credential.helper="~/.git-credentials"
 
       - name: Pull from GitLab
         id: clone-gitlab
