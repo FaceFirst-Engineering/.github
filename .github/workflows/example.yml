@@ -2,9 +2,9 @@ name: Build Docker images
 
 on:
   push:
-    paths:
-      - */**
-      - */.github/workflows/example.yml
+    # paths:
+    #   - *
+    #   - .github/workflows/example.yml
   pull_request:
 
 env:
