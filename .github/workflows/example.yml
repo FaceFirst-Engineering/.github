@@ -4,9 +4,6 @@ on:
   push:
   pull_request:
 
-env:
-
-
 jobs:
   docker-build:
     uses: ./.github/workflows/gitlab-dockerbuild.yml
@@ -18,6 +15,6 @@ jobs:
       gitlab_path: facefirst-engineering/devsecops
       # optional
       image_name: ${{ matrix.image }}
-      docker_file: dockerfile.powershell
+      docker_file: "dockerfile.${{ matrix.image }}"
       trigger_release: ${{ github.ref_name == 'main' }}
     secrets: inherit
