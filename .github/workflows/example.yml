@@ -16,7 +16,7 @@ on:
 
 env:
   repo_name: docker
-  gitlab_base: "https://gitlab.com/"
+  gitlab_base: "gitlab.com"
   gitlab_path: facefirst-engineering/devsecops
   image_name: powershell
 
@@ -33,17 +33,13 @@ jobs:
       - name: setup gitlab creds
         id: gitlab-config
         run: |
-          echo "username=${{ secrets.GL_USERNAME }}" > ~/.git-credentials
-          echo "password=${{ secrets.GL_TOKEN }}" >> ~/.git-credentials
           git config --global user.email "alex.rudolph@facefirst.com"
           git config --global user.name "Alex Rudolph"
-          cat ~/.git-credentials
-          git config --global credential.helper 'store --file ~/.git-credentials'
 
       - name: Pull from GitLab
         id: clone-gitlab
         run: |
-          git pull ${{ env.gitlab_base }}/${{ env.gitlab_path }}/${{ env.repo_name }}.git
+          git pull https://${{ secrets.GL_USERNAME }}:${{ secrets.GL_TOKEN }}@${{ env.gitlab_base }}/${{ env.gitlab_path }}/${{ env.repo_name }}.git
           echo "repo_path=${{ env.repo_name }}" >> $GITHUB_OUTPUT
           mv ${{ env.repo_name }}/dockerfile.powershell ${{ env.repo_name }}/Dockerfile
 
