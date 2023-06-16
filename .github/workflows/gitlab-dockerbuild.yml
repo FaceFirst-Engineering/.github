@@ -37,9 +37,9 @@ on:
         default: false
     secrets:
       GH_USERNAME:
-        required: false
+        required: true
       GH_MANAGEPACKAGETOKEN:
-        required: false
+        required: true
       GL_TOKEN:
         required: true
       GL_USERNAME:
@@ -83,19 +83,10 @@ jobs:
 
       - name: Login to Docker Hub
         uses: docker/login-action@v2
-        if: ${{ secrets.GH_MANAGEPACKAGETOKEN != '' }}
         with:
           registry: ghcr.io
           username: ${{ secrets.GH_USERNAME }}
           password: ${{ secrets.GH_MANAGEPACKAGETOKEN }}
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        if: ${{ secrets.GH_MANAGEPACKAGETOKEN == '' }}
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }} # THIS STEP NEEDS A CHECKOUT ACTION UPSTREAM TO USE THIS TOKEN
-          password: ${{ secrets.GITHUB_TOKEN }} # THIS STEP NEEDS A CHECKOUT ACTION UPSTREAM USE THIS TOKEN
 
       - name: Docker meta
         id: meta
