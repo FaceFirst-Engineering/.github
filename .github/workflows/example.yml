@@ -39,7 +39,7 @@ jobs:
       - name: Pull from GitLab
         id: clone-gitlab
         run: |
-          git pull https://${{ secrets.GL_USERNAME }}:${{ secrets.GL_TOKEN }}@${{ env.gitlab_base }}/${{ env.gitlab_path }}/${{ env.repo_name }}.git
+          git clone https://${{ secrets.GL_USERNAME }}:${{ secrets.GL_TOKEN }}@${{ env.gitlab_base }}/${{ env.gitlab_path }}/${{ env.repo_name }}.git ${{ env.repo_name }}
           echo "repo_path=${{ env.repo_name }}" >> $GITHUB_OUTPUT
           mv ${{ env.repo_name }}/dockerfile.powershell ${{ env.repo_name }}/Dockerfile
 
