@@ -20,11 +20,11 @@ jobs:
       - name: list files
         run: |
           echo RUNNING IN $PWD
-          ls -laR
+          ls -la ./.github/workflows/
 
       - name: Clone Gitlab
         id: clone-gitlab
-        uses: ./../workflows/gitlab-pull.yml
+        uses: ./.github/workflows/gitlab-pull.yml
         with:
           repo_name: docker
           gitlab_path: facefirst-engineering/devsecops
