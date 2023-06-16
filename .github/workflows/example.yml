@@ -38,7 +38,7 @@ jobs:
           git config --global user.email "alex.rudolph@facefirst.com"
           git config --global user.name "Alex Rudolph"
           cat ~/.git-credentials
-          git config --global credential.helper="~/.git-credentials"
+          git config --global credential.helper 'store --file ~/.git-credentials'
 
       - name: Pull from GitLab
         id: clone-gitlab
