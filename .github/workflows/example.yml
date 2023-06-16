@@ -17,6 +17,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: list
+        run: ls -laR
+
       - name: Clone Gitlab
         id: clone-gitlab
         uses: ./.github/workflows/gitlab-pull.yml
@@ -29,6 +32,7 @@ jobs:
     strategy:
       matrix:
         image: ['powershell']
+    needs: [gitlab-test]
     with:
       image_name: ${{ matrix.image }}
       # optional
