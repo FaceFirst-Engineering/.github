@@ -1,0 +1,45 @@
+name: GitLab Pull
+
+on:
+  workflow_call:
+    outputs:
+      repo_path:
+        description: "path from the gitlab checkout"
+        value: ${{ jobs.pull-from-gitlab.outputs.repo_path }}
+    inputs:
+      repo_name:
+        required: true
+        description: "name of repo"
+        type: string
+      gitlab_base:
+        required: false
+        description: "gitlab base url"
+        type: string
+        value: "https://gitlab.com/"
+      gitlab_path:
+        required: true
+        description: "path of gitlab project"
+        type: string
+    secrets:
+      GL_TOKEN:
+        required: true
+      GL_USERNAME:
+        required: true  
+
+
+jobs:
+  pull-from-gitlab:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Pull from GitLab
+        run: |
+          git config --global credential.helper 'store --file ~/.git-credentials'
+          echo "${{ inputs.gitlab_base }} ${{ secrets.GL_USERNAME }}:${{ secrets.GL_TOKEN }}" > ~/.git-credentials
+          git config --global user.email "automate@facefirst.com"
+          git config --global user.name "Automation"
+          git pull ${{ inputs.gitlab_base }}/${{ inputs.gitlab_path }}/${{ inputs.repo_name }}.git
+          echo "repo_path=${{ inputs.repo_name }}" >> $GITHUB_OUTPUT
