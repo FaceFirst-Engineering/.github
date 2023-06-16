@@ -11,6 +11,10 @@ on:
         required: true
         description: "path of gitlab project"
         type: string
+      image_name:
+        required: true
+        description: "name of docker image"
+        type: string
       gitlab_base:
         required: false
         description: "gitlab base url"

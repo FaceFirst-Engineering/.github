@@ -9,12 +9,15 @@ jobs:
     uses: ./.github/workflows/gitlab-dockerbuild.yml
     strategy:
       matrix:
-        image: ['powershell']
+        image: ['powershell','caffecuda']
     with:
       repo_name: docker
       gitlab_path: facefirst-engineering/devsecops
-      # optional
       image_name: ${{ matrix.image }}
+      # optional overrides
       docker_file: "dockerfile.${{ matrix.image }}"
       trigger_release: ${{ github.ref_name == 'main' }}
+      # optional defaults
+      gitlab_base: "gitlab.com"
+      email: "no-reply@example.com"
     secrets: inherit
