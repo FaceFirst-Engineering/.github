@@ -1,43 +1,49 @@
 name: Build Docker images
 
 on:
-  workflow_dispatch:
   push:
     paths:
       - ./**
       - ./.github/workflows/example.yml
   pull_request:
 
+env:
+  repo_name: docker
+  gitlab_base: "https://gitlab.com/"
+  gitlab_path: facefirst-engineering/devsecops
+
 jobs:
   gitlab-test:
-    outputs:
-      repo_path: ${{ steps.clone-gitlab.outputs.repo_path }}
+    # outputs:
+    #   repo_path: ${{ steps.clone-gitlab.outputs.repo_path }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: list files
-        run: |
-          echo RUNNING IN $PWD
-          ls -la ./.github/workflows/
-
-      - name: Clone Gitlab
+      - name: Pull from GitLab
         id: clone-gitlab
-        uses: ./.github/workflows/gitlab-pull.yml
-        with:
-          repo_name: docker
-          gitlab_path: facefirst-engineering/devsecops
+        run: |
+          git config --global credential.helper 'store --file ~/.git-credentials'
+          echo "${{ env.gitlab_base }} ${{ secrets.GL_USERNAME }}:${{ secrets.GL_TOKEN }}" > ~/.git-credentials
+          git config --global user.email "automate@facefirst.com"
+          git config --global user.name "Automation"
+          git pull ${{ env.gitlab_base }}/${{ env.gitlab_path }}/${{ env.repo_name }}.git
+          echo "repo_path=${{ env.repo_name }}" >> $GITHUB_OUTPUT
 
-  docker-build:
-    uses: xander-rudolph/.github/.github/workflows/docker-publish.yml@master
-    strategy:
-      matrix:
-        image: ['powershell']
-    needs: [gitlab-test]
-    with:
-      image_name: ${{ matrix.image }}
-      # optional
-      working_dir: ./${{ needs.gitlab-test.outputs.repo_path }}/${{ matrix.image }}
-      trigger_release: ${{ github.ref_name == 'main' }}
-    secrets: inherit
+      # - name: Clone Gitlab
+      #   id: clone-gitlab
+      #   uses: ./.github/workflows/gitlab-pull.yml
+      #   with:
+      #     repo_name: docker
+      #     gitlab_path: facefirst-engineering/devsecops
+      
+      - name: docker build
+        uses: xander-rudolph/.github/.github/workflows/docker-publish.yml@master
+        strategy:
+          matrix:
+            image: ['powershell']
+        needs: [clone-gitlab]
+        with:
+          image_name: ${{ matrix.image }}
+          # optional
+          working_dir: ./${{ steps.clone-gitlab.outputs.repo_path }}/${{ matrix.image }}
+          trigger_release: ${{ github.ref_name == 'main' }}
+        secrets: inherit
