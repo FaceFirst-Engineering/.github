@@ -57,11 +57,9 @@ jobs:
         run: |
           git clone https://${{ secrets.GL_USERNAME }}:${{ secrets.GL_TOKEN }}@${{ inputs.gitlab_base }}/${{ inputs.gitlab_path }}/${{ inputs.repo_name }}.git ${{ inputs.repo_name }}
           echo "repo_path=${{ inputs.repo_name }}" >> $GITHUB_OUTPUT
-          mv ${{ inputs.repo_name }}/dockerfile.powershell ${{ inputs.repo_name }}/Dockerfile
 
       - name: Rename dockerfile
         if: ${{ inputs.docker_file != '' }}
-        id: clone-gitlab
         run: |
           mv ${{ inputs.repo_name }}/${{ inputs.docker_file }} ${{ inputs.repo_name }}/Dockerfile
 
