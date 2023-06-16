@@ -33,8 +33,8 @@ jobs:
       - name: setup gitlab creds
         id: gitlab-config
         run: |
-          git config --global user.email "alex.rudolph@facefirst.com"
-          git config --global user.name "Alex Rudolph"
+          git config --global user.email "automate@facefirst.com"
+          git config --global user.name "Automation"
 
       - name: Pull from GitLab
         id: clone-gitlab
