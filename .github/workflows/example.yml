@@ -9,7 +9,7 @@ jobs:
     uses: ./.github/workflows/gitlab-dockerbuild.yml
     strategy:
       matrix:
-        image: ['powershell','caffecuda']
+        image: ['powershell','saml-idp']
     with:
       repo_name: docker
       gitlab_path: facefirst-engineering/devsecops
