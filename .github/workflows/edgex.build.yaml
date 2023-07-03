@@ -1,0 +1,14 @@
+name: Run MS Build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  docker-build:
+    uses: ./.github/workflows/gitlab-msbuild.yml
+    with:
+      repo_name: edgex
+      gitlab_path: facefirst-engineering
+      trigger_release: ${{ github.ref_name == 'main' }}
+    secrets: inherit
