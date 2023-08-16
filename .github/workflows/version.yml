@@ -8,15 +8,19 @@ on:
         value: ${{ jobs.versioner.outputs.version }}
     inputs:
       major:
+        type: string
         description: "Major version"
         required: true
       minor:
+        type: string
         description: "Minor version"
         required: true
       patch:
+        type: string
         description: "Patch version"
         required: true
       increment:
+        type: string
         description: "Increment value"
         required: true
 
