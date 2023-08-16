@@ -23,7 +23,7 @@ on:
 jobs:
   versioner:
     runs-on: windows-latest
-    name: Run MS Build
+    name: Generate Version
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
