@@ -40,11 +40,11 @@ jobs:
         id: version
         uses: paulhatch/semantic-version@v5.0.2
         with:
-          tag_prefix: "v"
           bump_each_commit: true
-          # bump_each_commit_patch_pattern: ""
           search_commit_body: true
           version_format: "${{ inputs.major }}.${{ inputs.minor }}.${{ inputs.patch }}.${increment}"
+          # tag_prefix: "v"
+          # bump_each_commit_patch_pattern: ""
         # version_format: "${major}.${minor}.${patch}"
         # traditional triggers
         # https://gitversion.net/docs/reference/version-increments
