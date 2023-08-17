@@ -22,7 +22,7 @@ on:
       increment:
         type: string
         description: "Increment value"
-        required: true
+        required: false
 
 jobs:
   versioner:
@@ -31,21 +31,21 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
-      - name: Set Version
-        id: version
-        run: |
-          echo "version=${{ inputs.major }}.${{ inputs.minor }}.${{ inputs.patch }}.${{ inputs.increment }}" >> $env:GITHUB_OUTPUT
+      # - name: Set Version
+      #   id: version
+      #   run: |
+      #     echo "version=${{ inputs.major }}.${{ inputs.minor }}.${{ inputs.patch }}.${{ inputs.increment }}" >> $env:GITHUB_OUTPUT
 
-    # - name: Semantic Version
-    #   id: version
-    #   if: ${{ github.ref_name == 'master' || github.ref_name == 'dev' }}
-    #   uses: paulhatch/semantic-version@v5.0.2
-    #   with:
-    #     search_commit_body: true
-    #     version_format: "${{ inputs.base_version }}.${minor}.${patch}.${increment}"
-    #   # version_format: "${major}.${minor}.${patch}"
-    #   # traditional triggers
-    #   # https://gitversion.net/docs/reference/version-increments
-    #   # major-version-bump-message: "^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\\([\\w\\s-]*\\))?(!:|:.*\\n\\n((.+\\n)+\\n)?BREAKING CHANGE:\\s.+)"
-    #   # minor-version-bump-message: "^(feat)(\\([\\w\\s-]*\\))?:"
-    #   # patch-version-bump-message: "^(build|chore|ci|docs|fix|perf|refactor|revert|style|test)(\\([\\w\\s-]*\\))?:"
+    - name: Semantic Version
+      id: version
+      if: ${{ github.ref_name == 'master' || github.ref_name == 'dev' }}
+      uses: paulhatch/semantic-version@v5.0.2
+      with:
+        search_commit_body: true
+        version_format: "${{ inputs.major }}.${{ inputs.minor }}.${{ inputs.patch }}.${increment}"
+      # version_format: "${major}.${minor}.${patch}"
+      # traditional triggers
+      # https://gitversion.net/docs/reference/version-increments
+      # major-version-bump-message: "^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\\([\\w\\s-]*\\))?(!:|:.*\\n\\n((.+\\n)+\\n)?BREAKING CHANGE:\\s.+)"
+      # minor-version-bump-message: "^(feat)(\\([\\w\\s-]*\\))?:"
+      # patch-version-bump-message: "^(build|chore|ci|docs|fix|perf|refactor|revert|style|test)(\\([\\w\\s-]*\\))?:"
