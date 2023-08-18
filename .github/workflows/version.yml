@@ -94,4 +94,4 @@ jobs:
             [string]$newVersion = $newVersion+"0"
           }
           
-          echo "version='$newVersion'" >> $env:GITHUB_OUTPUT
+          echo "version=$newVersion" >> $env:GITHUB_OUTPUT
