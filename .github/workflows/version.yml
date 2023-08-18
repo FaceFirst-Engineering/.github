@@ -19,14 +19,10 @@ on:
         type: string
         description: "Patch version"
         required: true
-      increment:
-        type: string
-        description: "Increment value"
-        required: false
 
 jobs:
   versioner:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     name: Generate Version
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -36,23 +32,59 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Semantic Version
+      - name: Auto Version
         id: version
-        uses: paulhatch/semantic-version@v5.0.2
-        with:
-          bump_each_commit: true
-          search_commit_body: true
-          version_format: "${{ inputs.major }}.${{ inputs.minor }}.${{ inputs.patch }}.${patch}"
-          # tag_prefix: "v"
-          # bump_each_commit_patch_pattern: ""
-        # version_format: "${major}.${minor}.${patch}"
-        # traditional triggers
-        # https://gitversion.net/docs/reference/version-increments
-        # major-version-bump-message: "^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\\([\\w\\s-]*\\))?(!:|:.*\\n\\n((.+\\n)+\\n)?BREAKING CHANGE:\\s.+)"
-        # minor-version-bump-message: "^(feat)(\\([\\w\\s-]*\\))?:"
-        # patch-version-bump-message: "^(build|chore|ci|docs|fix|perf|refactor|revert|style|test)(\\([\\w\\s-]*\\))?:"
+        shell: pwsh
+        run: |
+          $InputMajor=${{ inputs.major }}
+          $InputMinor=${{ inputs.minor }}
+          $InputPatch=${{ inputs.patch }}
+          $cleanedTags = git tag | ForEach {$_.replace('v','')}
+          $Tags = ($cleanedTags | Sort {[version]$_})
+          switch ($tags.count) {
+            { $_ -gt 1 } {$tag = $tags[$tags.count-1]}
+            { $_ -eq 1 } {$tag = $tags}
+            default {
+              [version]$tag="$($InputMajor).$($InputMinor).$($InputPatch).0"
+              Write-Warning "Tag not found... using $($tag.ToString())..."
+              $resetCounter=$true
+            }
+          }
 
-      # - name: Set Version
-      #   id: version
-      #   run: |
-      #     echo "version=${{ inputs.major }}.${{ inputs.minor }}.${{ inputs.patch }}.${{ inputs.increment }}" >> $env:GITHUB_OUTPUT
+          $version = [version]"$tag"
+          If($InputMajor -gt $version.Major)
+          {
+            [string]$newVersion = "$InputMajor."
+            $resetCounter = $true
+          }
+          else {
+            [string]$newVersion = "$($version.Major)."
+          }
+
+          If($InputMinor -gt $version.Minor)
+          {
+            [string]$newVersion = $newVersion+"$InputMinor."
+            $resetCounter = $true
+          }
+          Else{
+            [string]$newVersion = $newVersion+"$($version.Minor)."
+          }
+
+          If($InputPatch -gt $version.Build)
+          {
+            [string]$newVersion = $newVersion+"$InputPatch."
+            $resetCounter = $true
+          }
+          else{
+            [string]$newVersion = $newVersion+"$($version.Build)."
+          }
+
+          If(-not $resetCounter)
+          {
+            [string]$newVersion = $newVersion+"$($version.Revision + 1)"
+          }
+          else {
+            [string]$newVersion = $newVersion+"0"
+          }
+          
+          echo "version='$newVersion'" >> $env:GITHUB_OUTPUT
