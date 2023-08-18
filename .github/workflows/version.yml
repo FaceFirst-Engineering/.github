@@ -7,6 +7,11 @@ on:
         description: "Automatic Version Number"
         value: ${{ jobs.versioner.outputs.version }}
     inputs:
+      bumpversion:
+        type: boolean
+        description: "If true, version will be bumped, otherwise the tag or latest version will be used"
+        required: false
+        default: true
       major:
         type: string
         description: "Major version"
@@ -94,4 +99,11 @@ jobs:
             [string]$newVersion = $newVersion+"0"
           }
           
-          echo "version=$newVersion" >> $env:GITHUB_OUTPUT
+          If ($bumpversion)
+          {
+            echo "version=$newVersion" >> $env:GITHUB_OUTPUT
+          }
+          Else
+          {
+            echo "version=$version" >> $env:GITHUB_OUTPUT
+          }
