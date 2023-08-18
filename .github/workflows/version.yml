@@ -44,7 +44,9 @@ jobs:
           $InputMajor=${{ inputs.major }}
           $InputMinor=${{ inputs.minor }}
           $InputPatch=${{ inputs.patch }}
-          $cleanedTags = git tag -l ${{ inputs.tag_prefix }}* | ForEach {$_.replace('${{ inputs.tag_prefix }}','')}
+          $cleanedTags = git tag -l ${{ inputs.tag_prefix }}* | ForEach {$_.replace('${{ inputs.tag_prefix }}','') | Select -Unique}
+          Write-Warning "Found the following tags:"
+          $cleanedTags 
           $Tags = ($cleanedTags | Sort {[version]$_})
           switch ($tags.count) {
             { $_ -gt 1 } {$tag = $tags[$tags.count-1]}
