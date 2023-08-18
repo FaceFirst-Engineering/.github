@@ -19,6 +19,11 @@ on:
         type: string
         description: "Patch version"
         required: true
+      tag_prefix:
+        type: string
+        description: "Value Tag to put at front of version"
+        required: false
+        default: "v"
 
 jobs:
   versioner:
@@ -39,7 +44,7 @@ jobs:
           $InputMajor=${{ inputs.major }}
           $InputMinor=${{ inputs.minor }}
           $InputPatch=${{ inputs.patch }}
-          $cleanedTags = git tag | ForEach {$_.replace('v','')}
+          $cleanedTags = git tag -l ${{ inputs.tag_prefix }}* | ForEach {$_.replace('${{ inputs.tag_prefix }}','')}
           $Tags = ($cleanedTags | Sort {[version]$_})
           switch ($tags.count) {
             { $_ -gt 1 } {$tag = $tags[$tags.count-1]}
