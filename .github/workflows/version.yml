@@ -67,6 +67,7 @@ jobs:
           If($InputMajor -gt $version.Major)
           {
             [string]$newVersion = "$InputMajor."
+            Write-Warning "Major version change.. resetting counter"
             $resetCounter = $true
           }
           else {
@@ -76,6 +77,7 @@ jobs:
           If($InputMinor -gt $version.Minor)
           {
             [string]$newVersion = $newVersion+"$InputMinor."
+            Write-Warning "Minor version change.. resetting counter"
             $resetCounter = $true
           }
           Else{
@@ -85,6 +87,7 @@ jobs:
           If($InputPatch -gt $version.Build)
           {
             [string]$newVersion = $newVersion+"$InputPatch."
+            Write-Warning "Patch version change.. resetting counter"
             $resetCounter = $true
           }
           else{
@@ -97,13 +100,16 @@ jobs:
           }
           else {
             [string]$newVersion = $newVersion+"0"
+            Write-Warning "Counter reset... using $newVersion"
           }
           
-          If ($bumpversion)
+          If ($${{ inputs.bumpversion }})
           {
             echo "version=$newVersion" >> $env:GITHUB_OUTPUT
+            Write-Warning "Outputting: $newVersion"
           }
           Else
           {
             echo "version=$version" >> $env:GITHUB_OUTPUT
+            Write-Warning "newVersion was calculated as $newVersion but we will use $version because of bumpversion"
           }
