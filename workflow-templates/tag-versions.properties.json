@@ -1,0 +1,7 @@
+{
+    "name": "Tag Versions",
+    "description": "Generate tags and releases",
+    "iconName": "",
+    "categories": [""],
+    "filePatterns": []
+}

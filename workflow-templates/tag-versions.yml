@@ -1,0 +1,45 @@
+name: Example - Get Version and generate release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - '**' # using branches instead of all ignores tags https://stackoverflow.com/a/71879890
+
+env:
+  prefix: "v"
+
+jobs:
+  versioner:
+    uses: facefirst-engineering/.github/.github/workflows/tag-versions.yml@main
+    secrets: inherit
+
+  master-test:
+    runs-on: ubuntu-latest
+    needs: versioner
+    name: create tag
+    if: ${{ github.ref_name == 'master' }}
+    steps:
+      - name: Upload Release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GH_PACKAGETOKEN }}"
+          automatic_release_tag: "${{ env.prefix }}${{ needs.versioner.outputs.version }}"
+          prerelease: false
+          title: "test-${{ env.prefix }}${{ needs.versioner.outputs.version }}"
+
+  dev-test:
+    runs-on: ubuntu-latest
+    needs: versioner
+    name: create tag
+    if: ${{ github.ref_name == 'dev' }}
+    steps:
+      - name: Upload Release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GH_PACKAGETOKEN }}"
+          automatic_release_tag: "${{ env.prefix }}${{ needs.versioner.outputs.version }}"
+          prerelease: false
+          title: "test-${{ env.prefix }}${{ needs.versioner.outputs.version }}-prerelease"
+          
+
