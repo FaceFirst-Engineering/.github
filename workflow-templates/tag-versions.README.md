@@ -1,4 +1,4 @@
-# version-test
+# tag-versions
 
 ## Setup
 Create a new repo and then clone it locally, then run the following:
