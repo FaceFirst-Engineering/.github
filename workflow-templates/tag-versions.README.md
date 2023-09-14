@@ -1,7 +1,7 @@
 # tag-versions
 
 ## Setup
-Create a new repo and then clone it locally, then run the following:
+Create a [new repo](https://github.com/new) and then clone it locally, then run the following:
 ```
 $tagPrefix = "v"
 $firstVersion = "1.0.0.0"
@@ -10,6 +10,9 @@ $fulltag = "$($tagPrefix)$($firstVersion)"
 git tag -a $fulltag
 git push origin $fulltag
 ```
+
+## Adding the action
+Go to the repo you created and select "Actions" from the header bars. Scroll down until you see the FaceFirst-Engineering actions.
 
 ## to quickly test commits
 ```
