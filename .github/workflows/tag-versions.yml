@@ -1,0 +1,105 @@
+name: Generate Release Version
+
+on:
+  workflow_call:
+    outputs:
+      version:
+        description: "Automatic Version Number"
+        value: ${{ jobs.versioner.outputs.version }}
+    inputs:
+      ignoreBranch:
+        type: string
+        description: "branch to not bump on"
+        required: false
+        default: "master"
+      versionKeywords:
+        type: string
+        description: "Keywords to search for"
+        required: false
+        default: '@("MAJOR", "MINOR", "BUILD")'
+      tagPrefix:
+        type: string
+        description: "Value Tag to put at front of version"
+        required: false
+        default: "v"
+
+jobs:
+  versioner:
+    runs-on: windows-latest
+    name: Generate Version
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          # fetch-tags: true # It seems to do this but I don't really know because its default is false
+
+      - name: Auto Version
+        id: version
+        shell: pwsh
+        run: |
+          $ignoreBranch = "${{ inputs.ignoreBranch }}"
+          $versionKeywords = ${{ inputs.versionKeywords }}
+          $tagPrefix = "${{ inputs.tagPrefix }}"
+          $defaultBranch = "${{ github.event.repository.default_branch }}"
+          $currentBranch = "${{ github.ref_name }}"
+
+          # Get the current version from the latest tag
+          $currentVersionObject = (git tag --list "$tagPrefix*" | ForEach-Object {[version]($_.replace($tagPrefix,""))} | Sort-Object -Descending)[0]
+          $currentVersion = $currentVersionObject.ToString()
+          $versionCommitId = (git show-ref -s "v$currentVersion")
+
+          # Check if the current branch should bump the version
+          if ($currentBranch -ne $ignoreBranch) {
+              # Initialize variables for version increments
+              $majorIncrement = 0
+              $minorIncrement = 0
+              $buildIncrement = 0
+              
+              write-warning "Running on default branch... will compare to commitID: $versionCommitId"
+              $commitHistory = git log --oneline $currentBranch ^$versionCommitId
+
+              Write-Warning "Dumping commit history:`n"
+              $commitHistory
+              # Loop through commit messages and check for version keywords
+              foreach ($commit in $commitHistory) {
+                  foreach ($keyword in $versionKeywords) {
+                      if ($commit -cmatch $keyword) {
+                          switch ($keyword) {
+                              "MAJOR" { $majorIncrement++; continue}
+                              "MINOR" { $minorIncrement++; continue }
+                              "BUILD" { $buildIncrement++; continue }
+                          }
+                      }
+                  }
+              }
+
+              # Create a new Version object with increments
+              $newVersionMajor = ($currentVersionObject.Major + $majorIncrement)
+              $newVersionMinor = ($currentVersionObject.Minor + $minorIncrement)
+              $newVersionBuild = ($currentVersionObject.Build + $buildIncrement)
+
+              if($majorIncrement -eq 0 -and $minorIncrement -eq 0 -and $buildIncrement -eq 0)
+              {
+                  $newVersionIncrement = ($currentVersionObject.Revision + $commitHistory.count)
+              }
+              Else
+              {
+                  $newVersionIncrement = 0
+              }
+                            
+              $newVersionObject = [Version]"$($newVersionMajor).$($newVersionMinor).$($newVersionBuild).$($newVersionIncrement)"
+
+              # Convert the new version back to a string
+              $newVersion = $newVersionObject.ToString()
+
+              # Display the new version
+              Write-Warning "New version: $newVersion"
+          }
+          else {
+              $newVersion = $currentVersion
+              Write-Warning "We sign on $ignoreBranch so we will use $newVersion."
+          }
+          echo "version=$newVersion" >> $env:GITHUB_OUTPUT
