@@ -12,7 +12,10 @@ git push origin $fulltag
 ```
 
 ## Adding the action
-Go to the repo you created and select "Actions" from the header bars. Scroll down until you see the FaceFirst-Engineering actions.
+Go to the repo you created and select "Actions" from the header bars. If there are no pipelines yet, scroll down until you see the FaceFirst-Engineering actions. Otherwise select `New Workflow` to get to the same menu. Alternatively, you can use the following URL with your repo subed in:
+```
+https://github.com/{OWNER}/{REPO}/actions/new
+```
 
 ## to quickly test commits
 ```
